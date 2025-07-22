@@ -2,3 +2,4 @@ Flask
 deepl
 python-dotenv
 werkzeug
+yandexcloud

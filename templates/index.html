@@ -43,6 +43,17 @@
                     {% endfor %}
                 </select>
             </div>
+            <div class="form-group">
+                <label>Translation Service:</label>
+                <div>
+                    <input type="radio" id="deepl" name="service" value="deepl" checked>
+                    <label for="deepl">DeepL</label>
+                </div>
+                <div>
+                    <input type="radio" id="yandex" name="service" value="yandex">
+                    <label for="yandex">Yandex</label>
+                </div>
+            </div>
             <button type="submit" class="btn">Translate</button>
         </form>
     </div>
