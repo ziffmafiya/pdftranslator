@@ -8,7 +8,7 @@
     "node": ">=18.0.0"
   },
   "scripts": {
-    "start": "node server.js"
+    "start": "node /api/server.js"
   },
   "dependencies": {
     "deepl-node": "^1.11.0",

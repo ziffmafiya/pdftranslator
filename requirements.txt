@@ -1,0 +1,4 @@
+Flask
+deepl
+python-dotenv
+werkzeug
