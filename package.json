@@ -1,0 +1,15 @@
+{
+  "name": "pdf-translator",
+  "version": "1.0.0",
+  "description": "A simple PDF translator using DeepL API",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "deepl-node": "^1.11.0",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "multer": "^1.4.5-lts.1"
+  }
+}

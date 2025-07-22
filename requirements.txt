@@ -1,0 +1,5 @@
+Flask
+deepl
+PyMuPDF
+python-dotenv
+werkzeug
