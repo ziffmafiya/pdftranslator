@@ -3,8 +3,10 @@ import deepl
 import requests # For ApyHub and LibreTranslate
 from flask import Flask, request, render_template, send_from_directory, flash, redirect, url_for
 from werkzeug.utils import secure_filename
+import json # Added for parsing JSON credentials
 from dotenv import load_dotenv
 from google.cloud import translate_v3beta1 as translate # Using v3beta1 for document translation features
+from google.oauth2 import service_account # Added for explicit credential loading
 # import fitz # PyMuPDF for LibreTranslate text extraction/reinsertion (commented out)
 
 load_dotenv()
@@ -36,18 +38,31 @@ deepl_client = deepl.DeepLClient(DEEPL_API_KEY)
 # to the path of your service account key JSON file.
 # For Vercel, you can set GOOGLE_APPLICATION_CREDENTIALS as a secret environment variable
 # with the content of your service account key JSON.
-# Alternatively, you can explicitly load credentials from a JSON string:
-google_credentials_json = os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON")
-if google_credentials_json:
-    from google.oauth2 import service_account
-    credentials = service_account.Credentials.from_service_account_info(json.loads(google_credentials_json))
-    google_translate_client = translate.TranslationServiceClient(credentials=credentials)
+# Initialize Google Translate client
+# Explicitly load credentials from GOOGLE_APPLICATION_CREDENTIALS_JSON environment variable.
+# This is the most robust way for Vercel.
+google_credentials_json_content = os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON")
+
+if google_credentials_json_content:
+    try:
+        credentials_info = json.loads(google_credentials_json_content)
+        credentials = service_account.Credentials.from_service_account_info(credentials_info)
+        google_translate_client = translate.TranslationServiceClient(credentials=credentials)
+        print("Google Translate client initialized with explicit JSON credentials.")
+    except json.JSONDecodeError as e:
+        raise ValueError(f"Error decoding GOOGLE_APPLICATION_CREDENTIALS_JSON: {e}")
+    except Exception as e:
+        raise ValueError(f"Error initializing Google Translate client with JSON credentials: {e}")
 else:
-    google_translate_client = translate.TranslationServiceClient() # Fallback to ADC
+    # Fallback to Application Default Credentials (ADC) if explicit JSON is not provided.
+    # This relies on `gcloud auth application-default login` locally or service account
+    # key file path set in GOOGLE_APPLICATION_CREDENTIALS env var.
+    google_translate_client = translate.TranslationServiceClient()
+    print("Google Translate client initialized using Application Default Credentials (ADC).")
 
 GOOGLE_CLOUD_PROJECT_ID = os.getenv("GOOGLE_CLOUD_PROJECT_ID")
 if not GOOGLE_CLOUD_PROJECT_ID:
-    raise ValueError("No GOOGLE_CLOUD_PROJECT_ID set for Flask application")
+    raise ValueError("No GOOGLE_CLOUD_PROJECT_ID set for Flask application. Required for Google Translate.")
 GOOGLE_CLOUD_LOCATION = "global"
 
 # Initialize ApyHub client (using requests)
