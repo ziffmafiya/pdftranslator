@@ -86,7 +86,7 @@ if not GOOGLE_CLOUD_STORAGE_BUCKET:
 # Инициализация клиента ApyHub (условно).
 # Клиент ApyHub инициализируется только при наличии APYHUB_API_KEY.
 APYHUB_API_KEY = os.getenv("APYHUB_API_KEY")
-APYHUB_TRANSLATE_DOC_URL = "https://api.apyhub.com/api/v1/convert/document/translate/url" # URL API для перевода документов ApyHub
+APYHUB_TRANSLATE_DOC_URL = "https://api.apyhub.com/translate/file" # Обновленный URL API для перевода документов ApyHub
 if not APYHUB_API_KEY:
     print("APYHUB_API_KEY not set. ApyHub translation will not be available.")
 
@@ -244,18 +244,22 @@ def translate_pdf(source_path, output_path, target_lang, engine):
         print(f"Using ApyHub for translation to {target_lang}")
         # Логика для вызова API перевода документов ApyHub
         headers = {
-            "apy-token": APYHUB_API_KEY
+            "apy-token": APYHUB_API_KEY,
+            # 'content-type': 'multipart/form-data', # requests добавит границу, если этот заголовок установлен при передаче files=
         }
+        
+        # Параметры, если они нужны (например, transliteration)
+        params = {
+            'transliteration': 'false', # Установите 'true', если требуется транслитерация
+        }
+
         files = {
-            "file": open(source_path, 'rb') # Открытие файла в бинарном режиме
-        }
-        data = {
-            "output": "pdf",
-            "language": target_lang.lower() # ApyHub может использовать коды языков в нижнем регистре
+            'file': open(source_path, 'rb'),
+            'language': (None, target_lang.lower()), # Язык перевода как часть files
         }
         
         try:
-            response = requests.post(APYHUB_TRANSLATE_DOC_URL, headers=headers, files=files, data=data)
+            response = requests.post(APYHUB_TRANSLATE_DOC_URL, params=params, headers=headers, files=files)
             response.raise_for_status() # Вызывает исключение для HTTP-ошибок (4xx или 5xx)
             
             # Сохранение переведенного содержимого в выходной файл
@@ -265,7 +269,7 @@ def translate_pdf(source_path, output_path, target_lang, engine):
         except requests.exceptions.RequestException as e:
             raise Exception(f"ApyHub API error: {e}")
         finally:
-            files["file"].close() # Гарантированное закрытие файла
+            files["file"][0].close() # Гарантированное закрытие файла
             
 #     elif engine == 'libretranslate':
 #         print(f"Using LibreTranslate for translation to {target_lang}")
