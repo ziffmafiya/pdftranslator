@@ -4,3 +4,4 @@ python-dotenv
 werkzeug
 google-cloud-translate
 requests
+google-cloud-storage
