@@ -198,7 +198,7 @@ def translate_pdf(source_path, output_path, target_lang, engine):
         print(f"Translation output will be saved to {gcs_output_uri}")
 
         input_configs = [
-            {"gcs_source": {"input_uri": gcs_source_uri}, "mime_type": "application/pdf"}
+            {"gcs_source": {"input_uri": gcs_source_uri}}
         ]
         output_config = {"gcs_destination": {"output_uri_prefix": gcs_output_uri}}
 
@@ -255,7 +255,7 @@ def translate_pdf(source_path, output_path, target_lang, engine):
 
         files = {
             'file': open(source_path, 'rb'),
-            'language': (None, target_lang.lower()), # Язык перевода как часть files
+            'language': (None, 'ua' if target_lang == 'UK' else target_lang.lower()), # ApyHub использует 'ua' для украинского, 'ru' для русского
         }
         
         try:
