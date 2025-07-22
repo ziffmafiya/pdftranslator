@@ -36,7 +36,15 @@ deepl_client = deepl.DeepLClient(DEEPL_API_KEY)
 # to the path of your service account key JSON file.
 # For Vercel, you can set GOOGLE_APPLICATION_CREDENTIALS as a secret environment variable
 # with the content of your service account key JSON.
-google_translate_client = translate.TranslationServiceClient()
+# Alternatively, you can explicitly load credentials from a JSON string:
+google_credentials_json = os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON")
+if google_credentials_json:
+    from google.oauth2 import service_account
+    credentials = service_account.Credentials.from_service_account_info(json.loads(google_credentials_json))
+    google_translate_client = translate.TranslationServiceClient(credentials=credentials)
+else:
+    google_translate_client = translate.TranslationServiceClient() # Fallback to ADC
+
 GOOGLE_CLOUD_PROJECT_ID = os.getenv("GOOGLE_CLOUD_PROJECT_ID")
 if not GOOGLE_CLOUD_PROJECT_ID:
     raise ValueError("No GOOGLE_CLOUD_PROJECT_ID set for Flask application")

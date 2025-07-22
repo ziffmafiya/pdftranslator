@@ -71,7 +71,7 @@
         APYHUB_API_KEY="ваш_ключ_от_apyhub"
         LIBRETRANSLATE_API_URL="http://localhost:5000/translate" # Или ваш URL
         ```
-    -   **Для Google Translate (локально):** Google Cloud Translation API использует [Application Default Credentials (ADC)](https://cloud.google.com/docs/authentication/production#automatically). Для локальной разработки вам нужно установить переменную окружения `GOOGLE_APPLICATION_CREDENTIALS`, указывающую на путь к JSON-файлу с ключом вашего сервисного аккаунта. Подробнее см. в [документации Google Cloud](https://cloud.google.com/docs/authentication/getting-started).
+    -   **Для Google Translate (локально):** Google Cloud Translation API использует [Application Default Credentials (ADC)](https://cloud.google.com/docs/authentication/production#automatically). Для локальной разработки вам нужно установить переменную окружения `GOOGLE_APPLICATION_CREDENTIALS_JSON`, содержащую **полное содержимое JSON-файла вашего ключа сервисного аккаунта**. Подробнее см. в [документации Google Cloud](https://cloud.google.com/docs/authentication/getting-started).
 
 5.  **Запустите сервер PDF-переводчика:**
     ```bash
@@ -97,5 +97,5 @@
 3.  **Импортируйте репозиторий** в Vercel. Платформа автоматически определит настройки из файла `vercel.json`.
 4.  **Настройте переменные окружения** в дашборде вашего проекта на Vercel.
     *   Создайте переменные `DEEPL_API_KEY`, `GOOGLE_CLOUD_PROJECT_ID`, `APYHUB_API_KEY`.
-    *   **Для Google Translate:** Если вы используете сервисный аккаунт, создайте переменную `GOOGLE_APPLICATION_CREDENTIALS` и вставьте в нее **полное содержимое JSON-файла вашего ключа сервисного аккаунта**. Vercel автоматически создаст временный файл с этими учетными данными.
+    *   **Для Google Translate:** Если вы используете сервисный аккаунт, создайте переменную `GOOGLE_APPLICATION_CREDENTIALS_JSON` и вставьте в нее **полное содержимое JSON-файла вашего ключа сервисного аккаунта**. Vercel автоматически создаст временный файл с этими учетными данными.
     *   Нажмите "Deploy". После завершения процесса ваше приложение будет доступно по публичной ссылке.
