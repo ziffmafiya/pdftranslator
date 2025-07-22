@@ -207,7 +207,7 @@ def translate_pdf(source_path, output_path, target_lang, engine):
 
         operation = google_translate_client.batch_translate_document(
             parent=parent,
-            source_language_code="auto", # Automatically detect source language
+            source_language_code="en", # Specify source language as English
             target_language_codes=[target_lang.lower()],
             input_configs=input_configs,
             output_config=output_config,
@@ -270,7 +270,7 @@ def translate_pdf(source_path, output_path, target_lang, engine):
         except requests.exceptions.RequestException as e:
             raise Exception(f"ApyHub API error: {e}")
         finally:
-            files["file"][0].close() # Гарантированное закрытие файла
+            files["file"].close() # Гарантированное закрытие файла
             
 #     elif engine == 'libretranslate':
 #         print(f"Using LibreTranslate for translation to {target_lang}")
