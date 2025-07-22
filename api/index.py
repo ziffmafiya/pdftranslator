@@ -3,18 +3,16 @@ import deepl
 from flask import Flask, request, render_template, send_from_directory, flash, redirect, url_for
 from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
-import sys
-
-# Add the root directory to the Python path
-# This helps Flask find the 'templates' folder when run from the 'api' directory
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
 
 load_dotenv()
 
-# When running on Vercel, the root path is different.
-# We specify the template_folder relative to the app's root.
-app = Flask(__name__, template_folder='../templates')
+# Define the absolute path to the project's root directory
+# VERCEL_BUILD_DIR is an environment variable available on Vercel
+# For local development, we fall back to finding the parent directory of 'api'
+APP_ROOT = os.environ.get('VERCEL_BUILD_DIR', os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+TEMPLATE_DIR = os.path.join(APP_ROOT, 'templates')
+
+app = Flask(__name__, template_folder=TEMPLATE_DIR)
 
 
 # Vercel uses a /tmp directory for temporary file storage.
@@ -77,19 +75,14 @@ def translate_pdf(source_path, output_path, target_lang):
     """
     Переводит PDF-документ, используя официальную функцию DeepL.
     """
-    try:
-        deepl_client.translate_document_from_filepath(
-            source_path,
-            output_path,
-            target_lang=target_lang,
-        )
-        print(f"Перевод завершён. Сохранён файл: {output_path}")
-    except deepl.DocumentTranslationException as error:
-        print(f"DocumentTranslationException: {error}")
-        raise error
-    except deepl.DeepLException as error:
-        print(f"DeepLException: {error}")
-        raise error
+    # This function will now raise exceptions on failure,
+    # and the main route will catch them and flash a message.
+    deepl_client.translate_document_from_filepath(
+        source_path,
+        output_path,
+        target_lang=target_lang,
+    )
+    print(f"Перевод завершён. Сохранён файл: {output_path}")
 
 @app.route('/downloads/<filename>')
 def download_file(filename):
