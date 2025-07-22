@@ -19,32 +19,32 @@
 *   **ApyHub Translate Documents**:
     *   Поддерживает перевод документов с сохранением верстки.
     *   Требует `APYHUB_API_KEY`.
-*   **LibreTranslate**:
-    *   **Внимание:** LibreTranslate — это в основном API для перевода *текста*. Для сохранения верстки PDF с LibreTranslate приложение использует сложную логику извлечения текста из PDF и его повторной вставки. Это может привести к проблемам с форматированием и наложением текста, особенно для сложных документов.
-    *   Требует `LIBRETRANSLATE_API_URL` (может быть локальный сервер или публичный инстанс).
+# *   **LibreTranslate**:
+#     *   **Внимание:** LibreTranslate — это в основном API для перевода *текста*. Для сохранения верстки PDF с LibreTranslate приложение использует сложную логику извлечения текста из PDF и его повторной вставки. Это может привести к проблемам с форматированием и наложением текста, особенно для сложных документов.
+#     *   Требует `LIBRETRANSLATE_API_URL` (может быть локальный сервер или публичный инстанс).
 
 ## Требования
 
 -   [Python](https://www.python.org/) (версия 3.8 или выше)
 -   API-ключи для выбранных сервисов:
-    *   [DeepL API Key](https://www.deepl.com/pro-api)
-    *   [Google Cloud Project ID](https://cloud.google.com/resource-manager/docs/creating-managing-projects) и настроенные [учетные данные Google Cloud](https://cloud.google.com/docs/authentication/getting-started)
-    *   [ApyHub API Key](https://apyhub.com/)
-    *   URL для [LibreTranslate API](https://libretranslate.com/) (если используете свой сервер LibreTranslate)
+        *   [DeepL API Key](https://www.deepl.com/pro-api)
+        *   [Google Cloud Project ID](https://cloud.google.com/resource-manager/docs/creating-managing-projects) и настроенные [учетные данные Google Cloud](https://cloud.google.com/docs/authentication/getting-started)
+        *   [ApyHub API Key](https://apyhub.com/)
+#         *   URL для [LibreTranslate API](https://libretranslate.com/) (если используете свой сервер LibreTranslate)
 
-## Установка и запуск LibreTranslate (локально)
+# ## Установка и запуск LibreTranslate (локально)
 
-Если вы планируете использовать LibreTranslate, вам нужно запустить его локально.
+# Если вы планируете использовать LibreTranslate, вам нужно запустить его локально.
 
-1.  **Скачайте LibreTranslate:**
-    Перейдите на страницу [релизов LibreTranslate на GitHub](https://github.com/LibreTranslate/LibreTranslate/releases) и скачайте последнюю версию.
+# 1.  **Скачайте LibreTranslate:**
+#     Перейдите на страницу [релизов LibreTranslate на GitHub](https://github.com/LibreTranslate/LibreTranslate/releases) и скачайте последнюю версию.
 
-2.  **Запустите LibreTranslate:**
-    Следуйте инструкциям на странице LibreTranslate для запуска сервера. Обычно это делается с помощью Docker или прямого запуска Python-скрипта. Например, с Docker:
-    ```bash
-    docker run -ti --rm -p 5000:5000 libretranslate/libretranslate
-    ```
-    Убедитесь, что LibreTranslate запущен и доступен по адресу, который вы укажете в `LIBRETRANSLATE_API_URL`.
+# 2.  **Запустите LibreTranslate:**
+#     Следуйте инструкциям на странице LibreTranslate для запуска сервера. Обычно это делается с помощью Docker или прямого запуска Python-скрипта. Например, с Docker:
+#     ```bash
+#     docker run -ti --rm -p 5000:5000 libretranslate/libretranslate
+#     ```
+#     Убедитесь, что LibreTranslate запущен и доступен по адресу, который вы укажете в `LIBRETRANSLATE_API_URL`.
 
 ## Установка и запуск PDF-переводчика (локально)
 
@@ -71,8 +71,7 @@
         APYHUB_API_KEY="ваш_ключ_от_apyhub"
         LIBRETRANSLATE_API_URL="http://localhost:5000/translate" # Или ваш URL
         ```
-    -   **Для Google Translate (локально):** Убедитесь, что у вас настроены учетные данные Google Cloud. Самый простой способ — это установить переменную окружения `GOOGLE_APPLICATION_CREDENTIALS`, указывающую на файл JSON с ключом сервисного аккаунта.
-    -   **Для LibreTranslate (локально):** Убедитесь, что ваш локальный сервер LibreTranslate запущен и переменная `LIBRETRANSLATE_API_URL` в `.env` указывает на него (например, `http://localhost:5000`).
+    -   **Для Google Translate (локально):** Google Cloud Translation API использует [Application Default Credentials (ADC)](https://cloud.google.com/docs/authentication/production#automatically). Для локальной разработки вам нужно установить переменную окружения `GOOGLE_APPLICATION_CREDENTIALS`, указывающую на путь к JSON-файлу с ключом вашего сервисного аккаунта. Подробнее см. в [документации Google Cloud](https://cloud.google.com/docs/authentication/getting-started).
 
 5.  **Запустите сервер PDF-переводчика:**
     ```bash
@@ -96,5 +95,7 @@
 1.  **Загрузите проект на GitHub.** Убедитесь, что файлы `.env` и `venv/` добавлены в `.gitignore`.
 2.  **Зарегистрируйтесь на Vercel**, используя ваш GitHub-аккаунт.
 3.  **Импортируйте репозиторий** в Vercel. Платформа автоматически определит настройки из файла `vercel.json`.
-4.  **Настройте переменные окружения** в дашборде вашего проекта на Vercel. Создайте переменные `DEEPL_API_KEY`, `GOOGLE_CLOUD_PROJECT_ID`, `APYHUB_API_KEY` и `LIBRETRANSLATE_API_URL` и укажите в них ваши ключи/ID/URL.
-5.  **Нажмите "Deploy"**. После завершения процесса ваше приложение будет доступно по публичной ссылке.
+4.  **Настройте переменные окружения** в дашборде вашего проекта на Vercel.
+    *   Создайте переменные `DEEPL_API_KEY`, `GOOGLE_CLOUD_PROJECT_ID`, `APYHUB_API_KEY`.
+    *   **Для Google Translate:** Если вы используете сервисный аккаунт, создайте переменную `GOOGLE_APPLICATION_CREDENTIALS` и вставьте в нее **полное содержимое JSON-файла вашего ключа сервисного аккаунта**. Vercel автоматически создаст временный файл с этими учетными данными.
+    *   Нажмите "Deploy". После завершения процесса ваше приложение будет доступно по публичной ссылке.

@@ -31,6 +31,11 @@ if not DEEPL_API_KEY:
 deepl_client = deepl.DeepLClient(DEEPL_API_KEY)
 
 # Initialize Google Translate client
+# The google-cloud-translate library automatically uses Application Default Credentials (ADC).
+# For local development, ensure GOOGLE_APPLICATION_CREDENTIALS environment variable is set
+# to the path of your service account key JSON file.
+# For Vercel, you can set GOOGLE_APPLICATION_CREDENTIALS as a secret environment variable
+# with the content of your service account key JSON.
 google_translate_client = translate.TranslationServiceClient()
 GOOGLE_CLOUD_PROJECT_ID = os.getenv("GOOGLE_CLOUD_PROJECT_ID")
 if not GOOGLE_CLOUD_PROJECT_ID:
