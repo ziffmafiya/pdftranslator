@@ -26,11 +26,14 @@ app.config['SECRET_KEY'] = os.urandom(24)
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs(app.config['DOWNLOAD_FOLDER'], exist_ok=True)
 
-# Initialize DeepL client
+# Initialize DeepL client (conditionally)
 DEEPL_API_KEY = os.getenv("DEEPL_API_KEY")
-if not DEEPL_API_KEY:
-    raise ValueError("No DEEPL_API_KEY set for Flask application")
-deepl_client = deepl.DeepLClient(DEEPL_API_KEY)
+deepl_client = None
+if DEEPL_API_KEY:
+    deepl_client = deepl.DeepLClient(DEEPL_API_KEY)
+    print("DeepL client initialized.")
+else:
+    print("DEEPL_API_KEY not set. DeepL translation will not be available.")
 
 # Initialize Google Translate client
 # The google-cloud-translate library automatically uses Application Default Credentials (ADC).
@@ -126,6 +129,8 @@ def translate_pdf(source_path, output_path, target_lang, engine):
     Переводит PDF-документ, используя выбранный API (DeepL, Google, ApyHub, LibreTranslate).
     """
     if engine == 'deepl':
+        if not deepl_client:
+            raise ValueError("DeepL API key is not configured. Please set DEEPL_API_KEY in your .env file.")
         print(f"Using DeepL for translation to {target_lang}")
         deepl_client.translate_document_from_filepath(
             source_path,
