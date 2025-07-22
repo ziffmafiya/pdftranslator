@@ -251,16 +251,17 @@ def translate_pdf(source_path, output_path, target_lang, engine):
         
         # Параметры, если они нужны (например, transliteration)
         params = {
+            'file_type': 'pdf', # Укажите тип файла для ApyHub
             'transliteration': 'false', # Установите 'true', если требуется транслитерация
         }
 
         files = {
             'file': open(source_path, 'rb'),
-            'language': (None, 'ua' if target_lang == 'UK' else target_lang.lower()), # ApyHub использует 'ua' для украинского, 'ru' для русского
+            'language': (None, 'uk'), # ApyHub использует 'ua' для украинского, 'ru' для русского
         }
         
         try:
-            response = requests.post(APYHUB_TRANSLATE_DOC_URL, params=params, headers=headers, files=files)
+            response = requests.post('https://api.apyhub.com/translate/file', params=params, headers=headers, files=files)
             response.raise_for_status() # Вызывает исключение для HTTP-ошибок (4xx или 5xx)
             
             # Сохранение переведенного содержимого в выходной файл
