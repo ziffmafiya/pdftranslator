@@ -14,6 +14,7 @@ import json # Используется для парсинга учетных д
 from dotenv import load_dotenv # Для загрузки переменных окружения из файла .env
 from google.cloud import translate_v3beta1 # Using v3beta1 for document translation features
 import google.oauth2.service_account # Added for explicit credential loading
+from google.cloud import storage # Added for Google Cloud Storage operations
 # import fitz # PyMuPDF for LibreTranslate text extraction/reinsertion (commented out)
 
 # Загрузка переменных окружения из файла .env
@@ -54,27 +55,34 @@ else:
 # и, опционально, GOOGLE_APPLICATION_CREDENTIALS_JSON для явной загрузки учетных данных.
 google_credentials_json_content = os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON")
 google_translate_client = None
+google_storage_client = None
 GOOGLE_CLOUD_PROJECT_ID = os.getenv("GOOGLE_CLOUD_PROJECT_ID")
 GOOGLE_CLOUD_LOCATION = "global" # Местоположение для Google Cloud Translate API
+GOOGLE_CLOUD_STORAGE_BUCKET = os.getenv("GOOGLE_CLOUD_STORAGE_BUCKET")
 
 if google_credentials_json_content and GOOGLE_CLOUD_PROJECT_ID:
     try:
         credentials_info = json.loads(google_credentials_json_content)
         credentials = google.oauth2.service_account.Credentials.from_service_account_info(credentials_info)
         google_translate_client = translate_v3beta1.TranslationServiceClient(credentials=credentials)
-        print("Google Translate client initialized with explicit JSON credentials.")
+        google_storage_client = storage.Client(credentials=credentials, project=GOOGLE_CLOUD_PROJECT_ID)
+        print("Google Translate and Storage clients initialized with explicit JSON credentials.")
     except json.JSONDecodeError as e:
         print(f"Error decoding GOOGLE_APPLICATION_CREDENTIALS_JSON: {e}. Google Translate will not be available.")
     except Exception as e:
-        print(f"Error initializing Google Translate client with JSON credentials: {e}. Google Translate will not be available.")
+        print(f"Error initializing Google Translate/Storage clients with JSON credentials: {e}. Google Translate will not be available.")
 elif GOOGLE_CLOUD_PROJECT_ID:
     # Если JSON-учетные данные не предоставлены, используется Application Default Credentials (ADC).
     # Это работает локально при `gcloud auth application-default login`
     # или при установке GOOGLE_APPLICATION_CREDENTIALS в путь к файлу ключа сервисного аккаунта.
     google_translate_client = translate_v3beta1.TranslationServiceClient()
-    print("Google Translate client initialized using Application Default Credentials (ADC).")
+    google_storage_client = storage.Client(project=GOOGLE_CLOUD_PROJECT_ID)
+    print("Google Translate and Storage clients initialized using Application Default Credentials (ADC).")
 else:
     print("GOOGLE_CLOUD_PROJECT_ID or GOOGLE_APPLICATION_CREDENTIALS_JSON not set. Google Translate will not be available.")
+
+if not GOOGLE_CLOUD_STORAGE_BUCKET:
+    print("GOOGLE_CLOUD_STORAGE_BUCKET not set. Google Cloud Document Translation will not be fully functional.")
 
 # Инициализация клиента ApyHub (условно).
 # Клиент ApyHub инициализируется только при наличии APYHUB_API_KEY.
@@ -172,12 +180,63 @@ def translate_pdf(source_path, output_path, target_lang, engine):
         )
     elif engine == 'google':
         # Проверка, настроен ли клиент Google Translate
-        if not google_translate_client or not GOOGLE_CLOUD_PROJECT_ID:
-            raise ValueError("Google Translate is not configured. Please set GOOGLE_CLOUD_PROJECT_ID and GOOGLE_APPLICATION_CREDENTIALS_JSON in your .env file.")
+        if not google_translate_client or not GOOGLE_CLOUD_PROJECT_ID or not google_storage_client or not GOOGLE_CLOUD_STORAGE_BUCKET:
+            raise ValueError("Google Translate is not fully configured. Please ensure GOOGLE_CLOUD_PROJECT_ID, GOOGLE_APPLICATION_CREDENTIALS_JSON (or ADC setup), and GOOGLE_CLOUD_STORAGE_BUCKET are set in your .env file.")
         print(f"Using Google Translate for translation to {target_lang}")
-        # Примечание: Реализация перевода документов Google Cloud сложна и требует настройки Google Cloud Storage.
-        # В текущей версии это не реализовано.
-        raise NotImplementedError("Google Cloud Document Translation is not yet implemented due to its complexity. It requires Google Cloud Storage setup.")
+
+        # Google Cloud Document Translation requires Google Cloud Storage.
+        # Upload the source file to GCS.
+        source_blob_name = f"uploads/{os.path.basename(source_path)}"
+        bucket = google_storage_client.bucket(GOOGLE_CLOUD_STORAGE_BUCKET)
+        blob = bucket.blob(source_blob_name)
+        blob.upload_from_filename(source_path)
+        gcs_source_uri = f"gs://{GOOGLE_CLOUD_STORAGE_BUCKET}/{source_blob_name}"
+        print(f"Uploaded {source_path} to {gcs_source_uri}")
+
+        # Define the GCS output URI. Google will create a directory for the translated file.
+        output_blob_prefix = f"translated/{os.path.basename(output_path).replace('.pdf', '')}/"
+        gcs_output_uri = f"gs://{GOOGLE_CLOUD_STORAGE_BUCKET}/{output_blob_prefix}"
+        print(f"Translation output will be saved to {gcs_output_uri}")
+
+        input_configs = [
+            {"gcs_source": {"input_uri": gcs_source_uri}, "mime_type": "application/pdf"}
+        ]
+        output_config = {"gcs_destination": {"output_uri_prefix": gcs_output_uri}}
+
+        parent = f"projects/{GOOGLE_CLOUD_PROJECT_ID}/locations/{GOOGLE_CLOUD_LOCATION}"
+
+        operation = google_translate_client.batch_translate_document(
+            parent=parent,
+            source_language_code="auto", # Automatically detect source language
+            target_language_codes=[target_lang.lower()],
+            input_configs=input_configs,
+            output_config=output_config,
+        )
+
+        print("Waiting for Google Cloud Document Translation operation to complete...")
+        response = operation.result(timeout=300) # Wait for the operation to complete, with a timeout
+        print("Google Cloud Document Translation operation completed.")
+
+        # The translated file will be in a subdirectory created by Google.
+        # We need to find the actual translated file in GCS and download it.
+        translated_blobs = list(bucket.list_blobs(prefix=output_blob_prefix))
+        translated_pdf_blob = None
+        for b in translated_blobs:
+            if b.name.endswith('.pdf'):
+                translated_pdf_blob = b
+                break
+
+        if translated_pdf_blob:
+            translated_pdf_blob.download_to_filename(output_path)
+            print(f"Downloaded translated file from GCS: {translated_pdf_blob.name} to {output_path}")
+        else:
+            raise Exception("Translated PDF file not found in Google Cloud Storage output.")
+
+        # Clean up: Optionally delete the uploaded source file and translated files from GCS
+        # blob.delete()
+        # if translated_pdf_blob:
+        #     translated_pdf_blob.delete()
+        # print("Cleaned up temporary files in GCS.")
         
     elif engine == 'apyhub':
         # Проверка, настроен ли клиент ApyHub
