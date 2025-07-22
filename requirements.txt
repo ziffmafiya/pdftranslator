@@ -2,4 +2,5 @@ Flask
 deepl
 python-dotenv
 werkzeug
-yandexcloud
+google-cloud-translate
+requests
