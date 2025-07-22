@@ -4,6 +4,9 @@
   "description": "A simple PDF translator using DeepL API",
   "main": "server.js",
   "type": "module",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "scripts": {
     "start": "node server.js"
   },
