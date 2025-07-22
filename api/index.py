@@ -5,7 +5,7 @@ from flask import Flask, request, render_template, send_from_directory, flash, r
 from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
 from google.cloud import translate_v3beta1 as translate # Using v3beta1 for document translation features
-import fitz # PyMuPDF for LibreTranslate text extraction/reinsertion
+# import fitz # PyMuPDF for LibreTranslate text extraction/reinsertion (commented out)
 
 load_dotenv()
 
@@ -43,12 +43,12 @@ if not APYHUB_API_KEY:
     raise ValueError("No APYHUB_API_KEY set for Flask application")
 APYHUB_TRANSLATE_DOC_URL = "https://api.apyhub.com/api/v1/convert/document/translate/url" # Assuming URL-based for simplicity
 
-# Initialize LibreTranslate (using requests)
-LIBRETRANSLATE_API_URL = os.getenv("LIBRETRANSLATE_API_URL")
-if not LIBRETRANSLATE_API_URL:
-    raise ValueError("No LIBRETRANSLATE_API_URL set for Flask application")
+# # Initialize LibreTranslate (using requests) (commented out)
+# LIBRETRANSLATE_API_URL = os.getenv("LIBRETRANSLATE_API_URL")
+# if not LIBRETRANSLATE_API_URL:
+#     raise ValueError("No LIBRETRANSLATE_API_URL set for Flask application")
 
-# Supported languages (DeepL, Google, ApyHub, LibreTranslate might have different sets)
+# Supported languages (DeepL, Google, ApyHub might have different sets)
 # For simplicity, we'll keep the current limited set for now.
 SUPPORTED_LANGUAGES = {
     "RU": "Russian",
@@ -134,95 +134,95 @@ def translate_pdf(source_path, output_path, target_lang, engine):
         finally:
             files["file"].close() # Ensure file is closed
             
-    elif engine == 'libretranslate':
-        print(f"Using LibreTranslate for translation to {target_lang}")
-        # LibreTranslate is primarily text-based.
-        # To preserve layout, we need to re-introduce PyMuPDF text extraction/reinsertion.
-        # This is complex and might not perfectly preserve layout.
+#     elif engine == 'libretranslate':
+#         print(f"Using LibreTranslate for translation to {target_lang}")
+#         # LibreTranslate is primarily text-based.
+#         # To preserve layout, we need to re-introduce PyMuPDF text extraction/reinsertion.
+#         # This is complex and might not perfectly preserve layout.
         
-        doc = fitz.open(source_path)
-        new_doc = fitz.open()
+#         doc = fitz.open(source_path)
+#         new_doc = fitz.open()
 
-        for page_num in range(len(doc)):
-            page = doc.load_page(page_num)
-            new_page = new_doc.new_page(width=page.rect.width, height=page.rect.height)
+#         for page_num in range(len(doc)):
+#             page = doc.load_page(page_num)
+#             new_page = new_doc.new_page(width=page.rect.width, height=page.rect.height)
             
-            text_spans = []
-            texts_to_translate = []
-            blocks = page.get_text("dict", flags=fitz.TEXTFLAGS_TEXT)["blocks"]
-            for block in blocks:
-                if block['type'] == 0:
-                    for line in block['lines']:
-                        for span in line['spans']:
-                            if span['text'].strip():
-                                text_spans.append(span)
-                                texts_to_translate.append(span['text'])
+#             text_spans = []
+#             texts_to_translate = []
+#             blocks = page.get_text("dict", flags=fitz.TEXTFLAGS_TEXT)["blocks"]
+#             for block in blocks:
+#                 if block['type'] == 0:
+#                     for line in block['lines']:
+#                         for span in line['spans']:
+#                             if span['text'].strip():
+#                                 text_spans.append(span)
+#                                 texts_to_translate.append(span['text'])
 
-            if not texts_to_translate:
-                new_doc.insert_pdf(doc, from_page=page_num, to_page=page_num)
-                continue
+#             if not texts_to_translate:
+#                 new_doc.insert_pdf(doc, from_page=page_num, to_page=page_num)
+#                 continue
 
-            # Translate texts using LibreTranslate
-            libre_headers = {'Content-Type': 'application/json'}
-            libre_data = {
-                "q": texts_to_translate,
-                "source": "auto", # LibreTranslate can auto-detect
-                "target": target_lang.lower()
-            }
+#             # Translate texts using LibreTranslate
+#             libre_headers = {'Content-Type': 'application/json'}
+#             libre_data = {
+#                 "q": texts_to_translate,
+#                 "source": "auto", # LibreTranslate can auto-detect
+#                 "target": target_lang.lower()
+#             }
             
-            try:
-                libre_response = requests.post(f"{LIBRETRANSLATE_API_URL}/translate", json=libre_data, headers=libre_headers)
-                libre_response.raise_for_status()
-                translated_texts = [r['translatedText'] for r in libre_response.json()]
-            except requests.exceptions.RequestException as e:
-                raise Exception(f"LibreTranslate API error: {e}")
+#             try:
+#                 libre_response = requests.post(f"{LIBRETRANSLATE_API_URL}/translate", json=libre_data, headers=libre_headers)
+#                 libre_response.raise_for_status()
+#                 translated_texts = [r['translatedText'] for r in libre_response.json()]
+#             except requests.exceptions.RequestException as e:
+#                 raise Exception(f"LibreTranslate API error: {e}")
 
-            if len(translated_texts) != len(text_spans):
-                raise Exception("LibreTranslate returned a different number of items than expected.")
+#             if len(translated_texts) != len(text_spans):
+#                 raise Exception("LibreTranslate returned a different number of items than expected.")
 
-            # Reconstruct the page with translated text
-            # Re-introducing font handling for LibreTranslate
-            font_path = os.path.join(APP_ROOT, "DejaVuSans.ttf") # Assuming DejaVuSans.ttf is in root
-            font_name = "DejaVu"
-            if not os.path.exists(font_path):
-                raise FileNotFoundError("Font file 'DejaVuSans.ttf' not found for LibreTranslate. Please download it and place it in the project directory.")
+#             # Reconstruct the page with translated text
+#             # Re-introducing font handling for LibreTranslate
+#             font_path = os.path.join(APP_ROOT, "DejaVuSans.ttf") # Assuming DejaVuSans.ttf is in root
+#             font_name = "DejaVu"
+#             if not os.path.exists(font_path):
+#                 raise FileNotFoundError("Font file 'DejaVuSans.ttf' not found for LibreTranslate. Please download it and place it in the project directory.")
             
-            new_page.insert_font(fontname=font_name, fontfile=font_path)
+#             new_page.insert_font(fontname=font_name, fontfile=font_path)
 
-            translated_text_index = 0
-            for block in blocks:
-                if block['type'] == 0:
-                    original_spans_in_block = []
-                    for line in block['lines']:
-                        for span in line['spans']:
-                            if span['text'].strip():
-                                original_spans_in_block.append(span)
+#             translated_text_index = 0
+#             for block in blocks:
+#                 if block['type'] == 0:
+#                     original_spans_in_block = []
+#                     for line in block['lines']:
+#                         for span in line['spans']:
+#                             if span['text'].strip():
+#                                 original_spans_in_block.append(span)
                     
-                    if not original_spans_in_block:
-                        continue
+#                     if not original_spans_in_block:
+#                         continue
 
-                    translated_texts_for_block = []
-                    for _ in original_spans_in_block:
-                        if translated_text_index < len(translated_texts):
-                            translated_texts_for_block.append(translated_texts[translated_text_index])
-                            translated_text_index += 1
+#                     translated_texts_for_block = []
+#                     for _ in original_spans_in_block:
+#                         if translated_text_index < len(translated_texts):
+#                             translated_texts_for_block.append(translated_texts[translated_text_index])
+#                             translated_text_index += 1
                     
-                    full_translated_text = " ".join(translated_texts_for_block)
+#                     full_translated_text = " ".join(translated_texts_for_block)
 
-                    first_span = original_spans_in_block[0]
-                    srgb = first_span['color']
-                    r = ((srgb >> 16) & 0xff) / 255.0
-                    g = ((srgb >> 8) & 0xff) / 255.0
-                    b = (srgb & 0xff) / 255.0
-                    color = (r, g, b)
-                    font_size = first_span['size']
+#                     first_span = original_spans_in_block[0]
+#                     srgb = first_span['color']
+#                     r = ((srgb >> 16) & 0xff) / 255.0
+#                     g = ((srgb >> 8) & 0xff) / 255.0
+#                     b = (srgb & 0xff) / 255.0
+#                     color = (r, g, b)
+#                     font_size = first_span['size']
 
-                    new_page.insert_textbox(block['bbox'], full_translated_text, fontsize=font_size, fontname=font_name, color=color, align=fitz.TEXT_ALIGN_LEFT)
+#                     new_page.insert_textbox(block['bbox'], full_translated_text, fontsize=font_size, fontname=font_name, color=color, align=fitz.TEXT_ALIGN_LEFT)
 
-        new_doc.save(output_path)
-        new_doc.close()
-        doc.close()
-        print(f"LibreTranslate Translation completed. Saved file: {output_path}")
+#         new_doc.save(output_path)
+#         new_doc.close()
+#         doc.close()
+#         print(f"LibreTranslate Translation completed. Saved file: {output_path}")
     else:
         raise ValueError("Invalid translation engine selected.")
     

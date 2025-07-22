@@ -30,9 +30,23 @@
     *   [DeepL API Key](https://www.deepl.com/pro-api)
     *   [Google Cloud Project ID](https://cloud.google.com/resource-manager/docs/creating-managing-projects) и настроенные [учетные данные Google Cloud](https://cloud.google.com/docs/authentication/getting-started)
     *   [ApyHub API Key](https://apyhub.com/)
-    *   URL для [LibreTranslate API](https://libretranslate.com/) (например, `http://localhost:5000/translate` или публичный URL)
+    *   URL для [LibreTranslate API](https://libretranslate.com/) (если используете свой сервер LibreTranslate)
 
-## Установка и запуск (локально)
+## Установка и запуск LibreTranslate (локально)
+
+Если вы планируете использовать LibreTranslate, вам нужно запустить его локально.
+
+1.  **Скачайте LibreTranslate:**
+    Перейдите на страницу [релизов LibreTranslate на GitHub](https://github.com/LibreTranslate/LibreTranslate/releases) и скачайте последнюю версию.
+
+2.  **Запустите LibreTranslate:**
+    Следуйте инструкциям на странице LibreTranslate для запуска сервера. Обычно это делается с помощью Docker или прямого запуска Python-скрипта. Например, с Docker:
+    ```bash
+    docker run -ti --rm -p 5000:5000 libretranslate/libretranslate
+    ```
+    Убедитесь, что LibreTranslate запущен и доступен по адресу, который вы укажете в `LIBRETRANSLATE_API_URL`.
+
+## Установка и запуск PDF-переводчика (локально)
 
 1.  **Клонируйте репозиторий или скачайте файлы проекта.**
 
@@ -58,9 +72,9 @@
         LIBRETRANSLATE_API_URL="http://localhost:5000/translate" # Или ваш URL
         ```
     -   **Для Google Translate (локально):** Убедитесь, что у вас настроены учетные данные Google Cloud. Самый простой способ — это установить переменную окружения `GOOGLE_APPLICATION_CREDENTIALS`, указывающую на файл JSON с ключом сервисного аккаунта.
-    -   **Для LibreTranslate (локально):** Если вы используете локальный сервер LibreTranslate, убедитесь, что он запущен.
+    -   **Для LibreTranslate (локально):** Убедитесь, что ваш локальный сервер LibreTranslate запущен и переменная `LIBRETRANSLATE_API_URL` в `.env` указывает на него (например, `http://localhost:5000`).
 
-5.  **Запустите сервер:**
+5.  **Запустите сервер PDF-переводчика:**
     ```bash
     python app.py
     ```
